@@ -42,42 +42,17 @@ public class MockServerClient {
                 .GET() // Making a GET request
                 .build();
 
-//        // Send the request and get the response as a string
-//        HttpResponse<String> response = null;
-//        try {
-//            response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-//        } catch (IOException | InterruptedException e) {
-//            throw new ApiException(
-//                    HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-//                    DOWNSTREAM_API_FAILURE,
-//                    HttpStatus.INTERNAL_SERVER_ERROR.value());
-//        }
-//
-//        // TODO: Print the status code and the response body received from the server - use logger
-//        log.info("Status Code: " + response.statusCode());
-//        log.info("Response Body: " + response.body());
-//
-//        if (HttpStatus.valueOf(response.statusCode()).isError())
-//            throw new ApiException(
-//                    HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-//                    DOWNSTREAM_API_FAILURE,
-//                    HttpStatus.INTERNAL_SERVER_ERROR.value());
-//
-//        DownstreamEmployeeDto employeesResponse = null;
-//        try {
-//            employeesResponse = this.objectMapper.readValue(response.body(), DownstreamEmployeeDto.class);
-//        } catch (JsonProcessingException e) {
-//            throw new ApiException(
-//                    HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-//                    DOWNSTREAM_API_RESPONSE_PROCESSING_FAILURE,
-//                    HttpStatus.INTERNAL_SERVER_ERROR.value());
-//        }
-
         DownstreamEmployeeDto employeesResponse = this.invokeApi(request, DownstreamEmployeeDto.class);
 
         return employeesResponse.getEmployees();
     }
 
+    /*
+        invokeApi() has not been used in getEmployeeById() because in case of invalid ID, mock server
+        returns a 404 which we need to send it back to the client.
+        invokeApi() would treat a 404 as an error and a 500 internal server error will be returned
+        to the client.
+    */
     public Employee getEmployeeById(String id) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(API_URL + "/api/v1/employee/" + id))
@@ -142,36 +117,6 @@ public class MockServerClient {
 
         DownstreamEmployeeByIdDto employeeResponse = this.invokeApi(request, DownstreamEmployeeByIdDto.class);
 
-//        // Send the request and get the response as a string
-//        HttpResponse<String> response = null;
-//        try {
-//            response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-//        } catch (IOException | InterruptedException e) {
-//            throw new ApiException(
-//                    HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-//                    DOWNSTREAM_API_FAILURE,
-//                    HttpStatus.INTERNAL_SERVER_ERROR.value());
-//        }
-//
-//        log.info("Status Code: " + response.statusCode());
-//        log.info("Response Body: " + response.body());
-//
-//        if (HttpStatus.valueOf(response.statusCode()).isError())
-//            throw new ApiException(
-//                    HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-//                    DOWNSTREAM_API_FAILURE,
-//                    HttpStatus.INTERNAL_SERVER_ERROR.value());
-//
-//        DownstreamEmployeeByIdDto employeeResponse = null;
-//        try {
-//            employeeResponse = this.objectMapper.readValue(response.body(), DownstreamEmployeeByIdDto.class);
-//        } catch (JsonProcessingException e) {
-//            throw new ApiException(
-//                    HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-//                    DOWNSTREAM_API_RESPONSE_PROCESSING_FAILURE,
-//                    HttpStatus.INTERNAL_SERVER_ERROR.value());
-//        }
-
         return employeeResponse.getEmployee();
     }
 
@@ -195,34 +140,6 @@ public class MockServerClient {
                 .build();
 
         return this.invokeApi(request, DownstreamEmployeeDeleteResponse.class);
-
-//        HttpResponse<String> response = null;
-//        try {
-//            response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-//        } catch (IOException | InterruptedException e) {
-//            throw new ApiException(
-//                    HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-//                    DOWNSTREAM_API_FAILURE,
-//                    HttpStatus.INTERNAL_SERVER_ERROR.value());
-//        }
-//
-//        log.info("Status Code: " + response.statusCode());
-//        log.info("Response Body: " + response.body());
-//
-//        if (HttpStatus.valueOf(response.statusCode()).isError())
-//            throw new ApiException(
-//                    HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-//                    DOWNSTREAM_API_FAILURE,
-//                    HttpStatus.INTERNAL_SERVER_ERROR.value());
-//
-//        try {
-//            return this.objectMapper.readValue(response.body(), DownstreamEmployeeDeleteResponse.class);
-//        } catch (JsonProcessingException e) {
-//            throw new ApiException(
-//                    HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-//                    DOWNSTREAM_API_RESPONSE_PROCESSING_FAILURE,
-//                    HttpStatus.INTERNAL_SERVER_ERROR.value());
-//        }
     }
 
     private <T> T invokeApi(HttpRequest request, Class<T> responseClass) {
@@ -254,5 +171,4 @@ public class MockServerClient {
                     HttpStatus.INTERNAL_SERVER_ERROR.value());
         }
     }
-
 }

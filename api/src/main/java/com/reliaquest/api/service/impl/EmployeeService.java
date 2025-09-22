@@ -12,12 +12,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -109,7 +107,6 @@ public class EmployeeService implements IEmployeeService {
     public Employee createEmployee(CreateEmployeeInput input) {
         return this.mockServerClient.createEmployee(input);
     }
-
 
     /*
      * Deletes a unique employee by their ID.
