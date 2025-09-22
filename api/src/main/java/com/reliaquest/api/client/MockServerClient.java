@@ -11,6 +11,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
@@ -26,10 +27,11 @@ public class MockServerClient {
     public static final String DOWNSTREAM_API_RESPONSE_PROCESSING_FAILURE =
             "Downstream API response processing failure";
     public static final String EMPLOYEE_NOT_FOUND = "employee_not_found";
-    public static final String BASE_PATH = "/api/v1/employee";
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
-    private static final String API_URL = "http://localhost:8112";
+
+    @Value("${mock-server.api-url}")
+    protected String API_URL;
 
     public MockServerClient() {
         this.httpClient = HttpClient.newHttpClient();
@@ -38,7 +40,7 @@ public class MockServerClient {
 
     public List<Employee> getAllEmployees() {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(API_URL + BASE_PATH))
+                .uri(URI.create(API_URL))
                 .GET() // Making a GET request
                 .build();
 
@@ -55,7 +57,7 @@ public class MockServerClient {
     */
     public Employee getEmployeeById(String id) {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(API_URL + "/api/v1/employee/" + id))
+                .uri(URI.create(API_URL + "/" + id))
                 .GET()
                 .build();
 
@@ -97,7 +99,7 @@ public class MockServerClient {
         return employeeResponse.getEmployee();
     }
 
-    public Employee createEmployee(CreateEmployeeInput input) {
+    public Employee createEmployee(CreateEmployeeDto input) {
 
         String serializedInput = null;
         try {
@@ -110,7 +112,7 @@ public class MockServerClient {
         }
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(API_URL + BASE_PATH))
+                .uri(URI.create(API_URL))
                 .header(CONTENT_TYPE, APPLICATION_JSON)
                 .POST(HttpRequest.BodyPublishers.ofString(serializedInput))
                 .build();
@@ -120,12 +122,12 @@ public class MockServerClient {
         return employeeResponse.getEmployee();
     }
 
-    public DownstreamEmployeeDeleteResponse deleteEmployee(DeleteEmployeeInput deleteEmployeeInput) {
+    public DownstreamEmployeeDeleteDto deleteEmployee(DeleteEmployeeDto deleteEmployeeDto) {
 
         // Convert the POJO to a JSON string
         String jsonBody = null;
         try {
-            jsonBody = this.objectMapper.writeValueAsString(deleteEmployeeInput);
+            jsonBody = this.objectMapper.writeValueAsString(deleteEmployeeDto);
         } catch (JsonProcessingException e) {
             throw new ApiException(
                     HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
@@ -134,12 +136,12 @@ public class MockServerClient {
         }
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(API_URL + BASE_PATH))
+                .uri(URI.create(API_URL))
                 .header(CONTENT_TYPE, APPLICATION_JSON)
                 .method(DELETE, HttpRequest.BodyPublishers.ofString(jsonBody))
                 .build();
 
-        return this.invokeApi(request, DownstreamEmployeeDeleteResponse.class);
+        return this.invokeApi(request, DownstreamEmployeeDeleteDto.class);
     }
 
     private <T> T invokeApi(HttpRequest request, Class<T> responseClass) {
@@ -154,13 +156,14 @@ public class MockServerClient {
         }
 
         log.info("Status Code: " + response.statusCode());
-        log.info("Response Body: " + response.body());
 
-        if (HttpStatus.valueOf(response.statusCode()).isError())
+        if (HttpStatus.valueOf(response.statusCode()).isError()) {
+            log.info("Response Body: " + response.body());
             throw new ApiException(
                     HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
                     DOWNSTREAM_API_FAILURE,
                     HttpStatus.INTERNAL_SERVER_ERROR.value());
+        }
 
         try {
             return this.objectMapper.readValue(response.body(), responseClass);

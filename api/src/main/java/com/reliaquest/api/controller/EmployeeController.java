@@ -1,6 +1,6 @@
 package com.reliaquest.api.controller;
 
-import com.reliaquest.api.model.CreateEmployeeInput;
+import com.reliaquest.api.model.CreateEmployeeDto;
 import com.reliaquest.api.model.Employee;
 import com.reliaquest.api.service.IEmployeeService;
 import java.util.List;
@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class EmployeeController implements IEmployeeController<Employee, CreateEmployeeInput> {
+public class EmployeeController implements IEmployeeController<Employee, CreateEmployeeDto> {
 
     @Autowired
     IEmployeeService employeeService;
@@ -22,13 +22,11 @@ public class EmployeeController implements IEmployeeController<Employee, CreateE
 
     @Override
     public ResponseEntity<List<Employee>> getEmployeesByNameSearch(String searchString) {
-        // TODO: input string validation
         return ResponseEntity.ok(this.employeeService.getEmployeesByNameSearch(searchString));
     }
 
     @Override
     public ResponseEntity<Employee> getEmployeeById(String id) {
-        // TODO: input string validation
         return ResponseEntity.ok(this.employeeService.getEmployeeById(id));
     }
 
@@ -46,7 +44,7 @@ public class EmployeeController implements IEmployeeController<Employee, CreateE
     }
 
     @Override
-    public ResponseEntity<Employee> createEmployee(CreateEmployeeInput input) {
+    public ResponseEntity<Employee> createEmployee(CreateEmployeeDto input) {
         return ResponseEntity.ok(this.employeeService.createEmployee(input));
     }
 

@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateEmployeeInput {
+public class CreateEmployeeDto {
 
     @JsonProperty("name")
     @NotBlank(message = "Name cannot be blank.")

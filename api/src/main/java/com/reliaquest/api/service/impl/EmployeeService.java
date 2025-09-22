@@ -2,8 +2,8 @@ package com.reliaquest.api.service.impl;
 
 import com.reliaquest.api.client.MockServerClient;
 import com.reliaquest.api.exception.ApiException;
-import com.reliaquest.api.model.CreateEmployeeInput;
-import com.reliaquest.api.model.DeleteEmployeeInput;
+import com.reliaquest.api.model.CreateEmployeeDto;
+import com.reliaquest.api.model.DeleteEmployeeDto;
 import com.reliaquest.api.model.Employee;
 import com.reliaquest.api.service.IEmployeeService;
 import io.micrometer.common.util.StringUtils;
@@ -31,6 +31,10 @@ public class EmployeeService implements IEmployeeService {
     public static final String INVALID_EMPLOYEE_ID = "invalid_employee_id";
     public static final String EMPLOYEE_ID_CANNOT_BE_EMPTY = "The employee ID cannot be empty";
     public static final String INVALID_ID_FORMAT = "The employee ID provided is not a valid UUID format";
+    public static final String EMPLOYEE_CREATION_FAILED = "employee_creation_failed";
+    public static final String EMPLOYEE_CREATE_OPERATION_FAILED = "Employee create operation failed";
+    public static final String AMBIGUOUS_DELETION_MULTIPLE_EMPLOYEES_FOUND_WITH_THE_SAME_NAME =
+            "Ambiguous deletion: multiple employees found with the same name";
 
     @Autowired
     MockServerClient mockServerClient;
@@ -38,7 +42,10 @@ public class EmployeeService implements IEmployeeService {
     public List<Employee> getAllEmployees() {
         // Improvement: Paginated response to limit data transferred over network
         // provided - mock server supports pagination
-        return this.mockServerClient.getAllEmployees();
+        List<Employee> employees = this.mockServerClient.getAllEmployees();
+        if (employees.isEmpty()) return List.of();
+        log.info("Found %d employees in the record".formatted(employees.size()));
+        return employees;
     }
 
     public List<Employee> getEmployeesByNameSearch(String searchString) {
@@ -50,7 +57,7 @@ public class EmployeeService implements IEmployeeService {
         }
 
         List<Employee> employees = this.mockServerClient.getAllEmployees();
-        ;
+        log.info("Found %d employees in the record".formatted(employees.size()));
 
         /* The filter() operation returns a new stream containing only the elements that match the given predicate.
          * The predicate here is a lambda expression that checks if the employee's name contains the search string,
@@ -67,9 +74,8 @@ public class EmployeeService implements IEmployeeService {
     public Employee getEmployeeById(String id) {
 
         // Validate the input string before making any API calls.
-        if (StringUtils.isBlank(id)) {
+        if (StringUtils.isBlank(id))
             throw new ApiException(INVALID_EMPLOYEE_ID, EMPLOYEE_ID_CANNOT_BE_EMPTY, HttpStatus.BAD_REQUEST.value());
-        }
 
         // Validate if the string is a valid UUID.
         try {
@@ -78,12 +84,24 @@ public class EmployeeService implements IEmployeeService {
             throw new ApiException(INVALID_EMPLOYEE_ID, INVALID_ID_FORMAT, HttpStatus.BAD_REQUEST.value());
         }
 
-        return this.mockServerClient.getEmployeeById(id);
+        Employee employee = this.mockServerClient.getEmployeeById(id);
+
+        if (employee == null)
+            throw new ApiException(
+                    EMPLOYEE_NOT_FOUND,
+                    "Employee information not found for Id: [%s]".formatted(id),
+                    HttpStatus.NOT_FOUND.value());
+
+        log.info("Found employee with id: [%s]".formatted(id));
+
+        return employee;
     }
 
     public Integer getHighestSalaryOfEmployees() {
 
         List<Employee> employees = this.mockServerClient.getAllEmployees();
+
+        log.info("Found %d employees in the record, proceeding with calculation".formatted(employees.size()));
 
         Optional<Employee> highestPaidEmployee =
                 employees.stream().max(Comparator.comparingInt(Employee::getEmployeeSalary));
@@ -96,7 +114,7 @@ public class EmployeeService implements IEmployeeService {
 
     public List<String> getTopTenHighestEarningEmployeeNames() {
         List<Employee> employees = this.mockServerClient.getAllEmployees();
-
+        log.info("Found %d employees in the record, proceeding with calculation".formatted(employees.size()));
         return employees.stream()
                 .sorted(Comparator.comparingLong(Employee::getEmployeeSalary).reversed())
                 .limit(MAX_SIZE)
@@ -104,8 +122,16 @@ public class EmployeeService implements IEmployeeService {
                 .toList();
     }
 
-    public Employee createEmployee(CreateEmployeeInput input) {
-        return this.mockServerClient.createEmployee(input);
+    public Employee createEmployee(CreateEmployeeDto input) {
+        Employee newEmployee = this.mockServerClient.createEmployee(input);
+
+        if (newEmployee == null)
+            throw new ApiException(
+                    EMPLOYEE_CREATION_FAILED,
+                    EMPLOYEE_CREATE_OPERATION_FAILED,
+                    HttpStatus.INTERNAL_SERVER_ERROR.value());
+
+        return newEmployee;
     }
 
     /*
@@ -126,6 +152,7 @@ public class EmployeeService implements IEmployeeService {
     @Synchronized
     public String deleteEmployeeById(String id) {
         List<Employee> allEmployees = this.mockServerClient.getAllEmployees();
+        log.info("Found %d employees in the record, proceeding with calculation".formatted(allEmployees.size()));
 
         // Finding the employee with the ID from the already present list to prevent
         // invoking GET employee by id API again
@@ -145,18 +172,18 @@ public class EmployeeService implements IEmployeeService {
                 .count();
 
         if (employeeCountWithSameName > 1) {
-            log.error("Cannot delete employee with name [%s]. Multiple employees with this name exist"
-                    .formatted(employeeName));
+            log.error("Cannot delete employee with name [%s]. Multiple employees [precisely: %d] with this name exist"
+                    .formatted(employeeName, employeeCountWithSameName));
             throw new ApiException(
                     EMPLOYEE_DELETE_FAILED,
-                    "Ambiguous deletion: multiple employees found with the same name",
+                    AMBIGUOUS_DELETION_MULTIPLE_EMPLOYEES_FOUND_WITH_THE_SAME_NAME,
                     HttpStatus.CONFLICT.value());
         }
 
         log.info("Found unique employee with ID [%s], proceeding with deletion by name: [%s]"
                 .formatted(id, employeeName));
 
-        this.mockServerClient.deleteEmployee(new DeleteEmployeeInput(employeeName));
+        this.mockServerClient.deleteEmployee(new DeleteEmployeeDto(employeeName));
         return employeeName;
     }
 }

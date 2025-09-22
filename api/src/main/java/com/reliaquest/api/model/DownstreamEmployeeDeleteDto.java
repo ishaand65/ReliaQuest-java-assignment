@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class DownstreamEmployeeDeleteResponse {
+public class DownstreamEmployeeDeleteDto {
 
     @JsonProperty("data")
     private Boolean data;

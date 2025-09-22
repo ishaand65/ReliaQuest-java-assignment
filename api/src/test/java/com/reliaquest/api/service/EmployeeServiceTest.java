@@ -2,7 +2,7 @@ package com.reliaquest.api.service;
 
 import com.reliaquest.api.client.MockServerClient;
 import com.reliaquest.api.exception.ApiException;
-import com.reliaquest.api.model.CreateEmployeeInput;
+import com.reliaquest.api.model.CreateEmployeeDto;
 import com.reliaquest.api.model.Employee;
 import com.reliaquest.api.service.impl.EmployeeService;
 import java.util.Collections;
@@ -185,11 +185,11 @@ public class EmployeeServiceTest {
         Employee newEmployee =
                 new Employee(UUID.randomUUID().toString(), "Jane Doe", 75000, 30, "Analyst", "jane.doe@test.com");
 
-        Mockito.when(mockServerClient.createEmployee(Mockito.any(CreateEmployeeInput.class)))
+        Mockito.when(mockServerClient.createEmployee(Mockito.any(CreateEmployeeDto.class)))
                 .thenReturn(newEmployee);
 
         Employee createdEmployee =
-                employeeService.createEmployee(new CreateEmployeeInput("Jane Doe", 75000, 30, "Analyst"));
+                employeeService.createEmployee(new CreateEmployeeDto("Jane Doe", 75000, 30, "Analyst"));
 
         Assertions.assertNotNull(createdEmployee, "The created employee should not be null.");
         Assertions.assertEquals(
@@ -197,6 +197,6 @@ public class EmployeeServiceTest {
                 createdEmployee.getEmployeeName(),
                 "The returned employee should match the mocked response.");
 
-        Mockito.verify(mockServerClient, Mockito.times(1)).createEmployee(Mockito.any(CreateEmployeeInput.class));
+        Mockito.verify(mockServerClient, Mockito.times(1)).createEmployee(Mockito.any(CreateEmployeeDto.class));
     }
 }

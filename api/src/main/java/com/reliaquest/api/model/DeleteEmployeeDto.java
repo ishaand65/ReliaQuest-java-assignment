@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class DeleteEmployeeInput {
+public class DeleteEmployeeDto {
 
     @JsonProperty("name")
     private String name;

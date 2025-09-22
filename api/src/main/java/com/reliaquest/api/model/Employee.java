@@ -17,6 +17,7 @@ import lombok.*;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Employee {
 
+    @JsonProperty("id")
     private String id;
 
     @JsonProperty("employee_name")

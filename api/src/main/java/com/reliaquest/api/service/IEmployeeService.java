@@ -1,6 +1,6 @@
 package com.reliaquest.api.service;
 
-import com.reliaquest.api.model.CreateEmployeeInput;
+import com.reliaquest.api.model.CreateEmployeeDto;
 import com.reliaquest.api.model.Employee;
 import java.util.List;
 
@@ -15,7 +15,7 @@ public interface IEmployeeService {
 
     public List<String> getTopTenHighestEarningEmployeeNames();
 
-    public Employee createEmployee(CreateEmployeeInput input);
+    public Employee createEmployee(CreateEmployeeDto input);
 
     public String deleteEmployeeById(String id);
 }
